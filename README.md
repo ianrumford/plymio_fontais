@@ -1,21 +1,17 @@
-# PlymioFontais
+# README
 
-**TODO: Add description**
+**plymio\_fontais**: A support package for the `Plymio` and `Harnais` Packages Families. 
+
+Although many modules are documented, not all have stable APIs yet and are therefore not documented at this time.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `plymio_fontais` to your list of dependencies in `mix.exs`:
+Add **plymio\_fontais** to your list of dependencies in *mix.exs*:
 
-```elixir
-def deps do
-  [
-    {:plymio_fontais, "~> 0.1.0"}
-  ]
-end
-```
+    def deps do
+      [{:plymio_fontais, "~> 0.1.0"}]
+    end
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/plymio_fontais](https://hexdocs.pm/plymio_fontais).
+## Examples
 
+See the examples in the [API Reference](<https://hexdocs.pm/plymio_fontais/readme.html>).
