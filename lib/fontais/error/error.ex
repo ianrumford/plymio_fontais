@@ -180,10 +180,10 @@ defmodule Plymio.Fontais.Error do
              when k in [@plymio_fontais_error_key_message] do
           cond do
             is_binary(v) ->
-              state |> Map.put(k, v)
+              {:ok, state |> Map.put(k, v)}
 
             is_atom(v) ->
-              state |> Map.put(k, v |> to_string)
+              {:ok, state |> Map.put(k, v |> to_string)}
 
             true ->
               {:error, %ArgumentError{message: "expected valid #{inspect(k)}; got #{inspect(v)}"}}
@@ -199,7 +199,7 @@ defmodule Plymio.Fontais.Error do
                     @plymio_fontais_error_key_format_message,
                     @plymio_fontais_error_key_format_order
                   ] do
-          state |> struct!([{k, v}])
+          {:ok, state |> struct!([{k, v}])}
         end
       end,
     def_error_exception:

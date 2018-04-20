@@ -72,7 +72,6 @@ defmodule Plymio.Fontais.Workflow do
               s
               |> update_field({k, v})
               |> case do
-                %__MODULE__{} = s -> {:cont, s}
                 {:ok, %__MODULE__{} = s} -> {:cont, s}
                 {:error, %{__struct__: _}} = result -> {:halt, result}
               end
@@ -113,7 +112,7 @@ defmodule Plymio.Fontais.Workflow do
     defp_update_field_passthru:
       quote do
         defp update_field(%__MODULE__{} = state, {k, v}) do
-          state |> struct([{k, v}])
+          {:ok, state |> struct([{k, v}])}
         end
       end,
     defp_update_field_unknown:
@@ -234,9 +233,6 @@ defmodule Plymio.Fontais.Workflow do
               else
                 {:error, %{__exception__: true}} = result -> result
               end
-
-            true ->
-              new_error_result(m: "update keyword field #{inspect(:proxy_field)} invalid", v: v)
           end
         end
       end,
@@ -262,9 +258,6 @@ defmodule Plymio.Fontais.Workflow do
               else
                 {:error, %{__exception__: true}} = result -> result
               end
-
-            true ->
-              new_error_result(m: "update keyword field #{inspect(:proxy_field)} invalid", v: v)
           end
         end
       end,

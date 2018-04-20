@@ -478,7 +478,6 @@ defmodule Plymio.Fontais.Option do
             result
 
           opzioni ->
-            # {:ok, opzioni |> Enum.reverse}
             {:ok, opzioni}
         end
 

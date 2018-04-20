@@ -1,6 +1,6 @@
 # README
 
-**plymio\_fontais**: A support package for the `Plymio` and `Harnais` Packages Families. 
+**plymio\_fontais**: A support package for the `Plymio` and `Harnais` Package Families. 
 
 Although many modules are documented, not all have stable APIs yet and are therefore not documented at this time.
 
@@ -9,7 +9,7 @@ Although many modules are documented, not all have stable APIs yet and are there
 Add **plymio\_fontais** to your list of dependencies in *mix.exs*:
 
     def deps do
-      [{:plymio_fontais, "~> 0.1.0"}]
+      [{:plymio_fontais, "~> 0.1.1"}]
     end
 
 ## Examples
