@@ -27,6 +27,11 @@ defmodule Plymio.Fontais.Guard do
       iex> is_atom(the_unset_value())
       true
 
+      iex> is_value_unset(the_unset_value())
+      true
+
+      iex> is_value_set(the_unset_value())
+      false
   """
 
   @since "0.1.0"
@@ -38,7 +43,9 @@ defmodule Plymio.Fontais.Guard do
   end
 
   @doc ~S"""
-  `is_value_unset/1` is a guard (`Kernel.defguard/1`) that tests whether its argument is the same as *the unset value*, returning `true` if so, otherwise `false`.
+  `is_value_unset/1` is a guard that tests whether its argument is the
+  same as *the unset value*, returning `true` if so, otherwise
+  `false`.
 
   ## Examples
 
@@ -59,7 +66,9 @@ defmodule Plymio.Fontais.Guard do
   defguard is_value_unset(value) when value == @plymio_fontais_the_unset_value
 
   @doc ~S"""
-  `is_value_set/1` is a guard (`Kernel.defguard/1`) that tests whether its argument is **not** the same as *the unset value*, returning `true` if so, otherwise `false`.
+  `is_value_set/1` is a guard that tests whether its argument is
+  **not** the same as *the unset value*, returning `true` if so,
+  otherwise `false`.
 
   ## Examples
 

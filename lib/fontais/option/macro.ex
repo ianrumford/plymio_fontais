@@ -112,4 +112,19 @@ defmodule Plymio.Fontais.Option.Macro do
       end
     end
   end
+
+  defmacro def_custom_opts_has_key?(opts \\ []) do
+    quote bind_quoted: [opts: opts] do
+      for {fun_name, fun_key} <- opts do
+        def unquote(fun_name)(opts) do
+          opts
+          |> Keyword.keyword?()
+          |> case do
+            true -> opts |> Keyword.has_key?(unquote(fun_key))
+            _ -> false
+          end
+        end
+      end
+    end
+  end
 end

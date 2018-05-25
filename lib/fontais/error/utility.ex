@@ -48,7 +48,7 @@ defmodule Plymio.Fontais.Error.Utility do
                  :m,
                  :msg
                ] ->
-            {@plymio_fontais_error_key_message, v}
+            {@plymio_fontais_error_field_message, v}
 
           {k, v}
           when k in [
@@ -56,13 +56,13 @@ defmodule Plymio.Fontais.Error.Utility do
                  :e,
                  :error
                ] ->
-            {@plymio_fontais_error_key_value, v}
+            {@plymio_fontais_error_field_value, v}
 
           {k, v}
           when k in [
                  :r
                ] ->
-            {@plymio_fontais_error_key_reason, v}
+            {@plymio_fontais_error_field_reason, v}
 
           # passthru
           x ->
@@ -101,13 +101,16 @@ defmodule Plymio.Fontais.Error.Utility do
 
   def validate_errors(errors) when is_list(errors) do
     errors
-    |> Enum.reduce_while([], fn error, not_errors ->
-      with {:ok, _} <- error |> validate_error do
-        {:cont, not_errors}
-      else
-        _ -> {:halt, [error | not_errors]}
+    |> Enum.reduce_while(
+      [],
+      fn error, not_errors ->
+        with {:ok, _} <- error |> validate_error do
+          {:cont, not_errors}
+        else
+          _ -> {:halt, [error | not_errors]}
+        end
       end
-    end)
+    )
     |> case do
       # all errors?
       [] ->

@@ -205,13 +205,16 @@ defmodule Plymio.Fontais.Option do
 
       is_list(value) ->
         value
-        |> Enum.reduce_while([], fn opts, collated_opts ->
-          with {:ok, new_opts} <- opts |> opts_normalise do
-            {:cont, collated_opts ++ new_opts}
-          else
-            {:error, %{__struct__: _}} = result -> {:halt, result}
+        |> Enum.reduce_while(
+          [],
+          fn opts, collated_opts ->
+            with {:ok, new_opts} <- opts |> opts_normalise do
+              {:cont, collated_opts ++ new_opts}
+            else
+              {:error, %{__struct__: _}} = result -> {:halt, result}
+            end
           end
-        end)
+        )
         |> case do
           {:error, %{__struct__: _}} = result -> result
           opts -> {:ok, opts}
@@ -258,8 +261,8 @@ defmodule Plymio.Fontais.Option do
   def opts_canonical_keys(opts, dict) do
     with {:ok, opts} <- opts |> opts_normalise,
          {:ok, dict} <- dict |> normalise_key_alias_dict do
-      # reject known_keys
       opts
+      # reject known_keys
       |> Enum.reject(fn {k, _v} -> Map.has_key?(dict, k) end)
       |> case do
         # no unknown keys
@@ -532,17 +535,20 @@ defmodule Plymio.Fontais.Option do
 
   def opzioni_validate(opzioni) when is_list(opzioni) do
     opzioni
-    |> Enum.reduce_while([], fn opts, opzioni ->
-      opts
-      |> opts_validate
-      |> case do
-        {:ok, opts} ->
-          {:cont, [opts | opzioni]}
+    |> Enum.reduce_while(
+      [],
+      fn opts, opzioni ->
+        opts
+        |> opts_validate
+        |> case do
+          {:ok, opts} ->
+            {:cont, [opts | opzioni]}
 
-        {:error, %{__struct__: _}} = result ->
-          {:halt, result}
+          {:error, %{__struct__: _}} = result ->
+            {:halt, result}
+        end
       end
-    end)
+    )
     |> case do
       {:error, %{__exception__: true}} = result -> result
       opzioni -> {:ok, opzioni |> Enum.reverse()}
@@ -616,13 +622,16 @@ defmodule Plymio.Fontais.Option do
 
       _ ->
         value
-        |> Enum.reduce_while([], fn opzioni, opzionis ->
-          with {:ok, opzioni} <- opzioni |> opzioni_normalise do
-            {:cont, [opzioni | opzionis]}
-          else
-            {:error, %{__struct__: _}} = result -> {:halt, result}
+        |> Enum.reduce_while(
+          [],
+          fn opzioni, opzionis ->
+            with {:ok, opzioni} <- opzioni |> opzioni_normalise do
+              {:cont, [opzioni | opzionis]}
+            else
+              {:error, %{__struct__: _}} = result -> {:halt, result}
+            end
           end
-        end)
+        )
         |> case do
           {:error, %{__struct__: _}} = result ->
             result

@@ -117,32 +117,24 @@ defmodule Plymio.Fontais.Error do
   end
 
   @vekil %{
-    def_error_complete: [
-      :def_error_redtape,
-      :def_error_defexception,
-      :def_error_types,
-      :def_new,
-      :def_new!,
-      :def_update,
-      :def_update!,
-      :defp_update_field_header,
-      :defp_update_field_error_message,
-      :defp_update_field_error_fields,
-      :def_error_new_error,
-      :def_error_exception,
-      :def_error_message_header,
-      :def_error_message_clause_user_transform,
-      :def_error_message_clause_default,
-      :def_error_message_format_message
+    defexception_package: [
+      :defexception_redtape,
+      :defexception_defexception,
+      :defexception_types,
+      :state_base_package,
+      :defexception_defp_update_field,
+      :defexception_new_error_package,
+      :defexception_def_exception,
+      :defexception_message_package
     ],
-    def_error_defexception:
+    defexception_defexception:
       quote do
         @plymio_fontais_error_struct_kvs_aliases [
-          @plymio_fontais_error_key_alias_message,
-          @plymio_fontais_error_key_alias_reason,
-          @plymio_fontais_error_key_alias_value,
-          @plymio_fontais_error_key_alias_format_message,
-          @plymio_fontais_error_key_alias_format_order
+          @plymio_fontais_error_field_alias_message,
+          @plymio_fontais_error_field_alias_reason,
+          @plymio_fontais_error_field_alias_value,
+          @plymio_fontais_error_field_alias_message_function,
+          @plymio_fontais_error_field_alias_message_config
         ]
 
         @plymio_fontais_error_struct_dict_aliases @plymio_fontais_error_struct_kvs_aliases
@@ -153,8 +145,8 @@ defmodule Plymio.Fontais.Error do
                                           {k, @plymio_fontais_the_unset_value}
                                         end)
                                         |> Keyword.put(
-                                          @plymio_fontais_error_key_format_order,
-                                          @plymio_fontais_error_default_format_order
+                                          @plymio_fontais_error_field_message_config,
+                                          @plymio_fontais_error_default_message_config
                                         )
                                         |> Keyword.new()
 
@@ -164,20 +156,25 @@ defmodule Plymio.Fontais.Error do
 
         defexception @plymio_fontais_error_defstruct
       end,
-    def_error_redtape:
+    defexception_redtape:
       quote do
         use Plymio.Fontais.Attribute
       end,
-    def_error_types: [
+    defexception_types: [
       quote do
         @type t :: %__MODULE__{}
       end,
       :def_minimal_types
     ],
-    defp_update_field_error_message:
+    defexception_defp_update_field: [
+      :state_defp_update_field_header,
+      :defexception_defp_update_field_message,
+      :defexception_defp_update_field_rest
+    ],
+    defexception_defp_update_field_message:
       quote do
         defp update_field(%__MODULE__{} = state, {k, v})
-             when k in [@plymio_fontais_error_key_message] do
+             when k in [@plymio_fontais_error_field_message] do
           cond do
             is_binary(v) ->
               {:ok, state |> Map.put(k, v)}
@@ -190,19 +187,19 @@ defmodule Plymio.Fontais.Error do
           end
         end
       end,
-    defp_update_field_error_fields:
+    defexception_defp_update_field_rest:
       quote do
         defp update_field(%__MODULE__{} = state, {k, v})
              when k in [
-                    @plymio_fontais_error_key_value,
-                    @plymio_fontais_error_key_reason,
-                    @plymio_fontais_error_key_format_message,
-                    @plymio_fontais_error_key_format_order
+                    @plymio_fontais_error_field_value,
+                    @plymio_fontais_error_field_reason,
+                    @plymio_fontais_error_field_message_function,
+                    @plymio_fontais_error_field_message_config
                   ] do
           {:ok, state |> struct!([{k, v}])}
         end
       end,
-    def_error_exception:
+    defexception_def_exception:
       quote do
         def exception(value)
 
@@ -214,15 +211,19 @@ defmodule Plymio.Fontais.Error do
           value |> new!
         end
       end,
-    def_error_message_header:
+    defexception_def_message_doc: nil,
+    defexception_def_message_since: nil,
+    defexception_def_message_spec:
       quote do
-        @spec message(t) :: String.t()
+      end,
+    defexception_def_message_header:
+      quote do
         def message(error)
       end,
-    def_error_message_clause_user_transform:
+    defexception_def_message_clause_user_transform:
       quote do
         def message(
-              %__MODULE__{@plymio_fontais_error_key_format_message => format_message} = state
+              %__MODULE__{@plymio_fontais_error_field_message_function => format_message} = state
             )
             when is_function(format_message) do
           state
@@ -237,18 +238,40 @@ defmodule Plymio.Fontais.Error do
           end
         end
       end,
-    def_error_message_clause_default:
+    defexception_def_message_clause_default:
       quote do
         def message(%__MODULE__{} = state) do
           state
           |> format_error_message
         end
       end,
-    def_error_message_format_message:
+    defexception_def_message: [
+      :defexception_def_message_doc,
+      :defexception_def_message_since,
+      :defexception_def_message_spec,
+      :defexception_def_message_header,
+      :defexception_def_message_clause_user_transform,
+      :defexception_def_message_clause_default
+    ],
+    defexception_message_package: [
+      :defexception_def_message,
+      :defexception_def_format_error_message
+    ],
+    defexception_def_format_error_message_doc: nil,
+    defexception_def_format_error_message_since: nil,
+    defexception_def_format_error_message_spec:
+      quote do
+        @spec format_error_message(t) :: String.t()
+      end,
+    defexception_def_format_error_message_header:
+      quote do
+        def format_error_message(error)
+      end,
+    defexception_def_format_error_message_clause_default:
       quote do
         def format_error_message(
               %__MODULE__{
-                @plymio_fontais_error_key_format_order => format_order
+                @plymio_fontais_error_field_message_config => format_order
               } = state
             ) do
           format_order
@@ -261,9 +284,30 @@ defmodule Plymio.Fontais.Error do
           end
         end
       end,
-    def_error_new_error:
+    defexception_def_format_error_message: [
+      :defexception_def_format_error_message_doc,
+      :defexception_def_format_error_message_since,
+      :defexception_def_format_error_message_spec,
+      :defexception_def_format_error_message_header,
+      :defexception_def_format_error_message_clause_default
+    ],
+    defexception_new_error_package: [
+      :defexception_def_new_result,
+      :defexception_def_new_error_result_defdelegate_new_result
+    ],
+    defexception_def_new_result_doc: nil,
+    defexception_def_new_result_since: nil,
+    defexception_def_new_result_spec:
       quote do
-        def new_result(opts \\ []) do
+        @spec new_result(opts) :: {:error, t} | no_return
+      end,
+    defexception_def_new_result_header:
+      quote do
+        def new_result(opts \\ [])
+      end,
+    defexception_def_new_result_clause_arg0_list:
+      quote do
+        def new_result(opts) when is_list(opts) do
           opts
           |> new
           |> case do
@@ -276,7 +320,16 @@ defmodule Plymio.Fontais.Error do
               end
           end
         end
-
+      end,
+    defexception_def_new_result: [
+      :defexception_def_new_result_doc,
+      :defexception_def_new_result_since,
+      :defexception_def_new_result_spec,
+      :defexception_def_new_result_header,
+      :defexception_def_new_result_clause_arg0_list
+    ],
+    defexception_def_new_error_result_defdelegate_new_result:
+      quote do
         defdelegate new_error_result(opts), to: __MODULE__, as: :new_result
       end
   }

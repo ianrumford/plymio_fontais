@@ -1,15 +1,15 @@
 defmodule Plymio.Error do
   @moduledoc false
 
-  require Plymio.Fontais.Vekil, as: VEKIL
+  require Plymio.Fontais.Vekil.ProxyForomDict
   use Plymio.Fontais.Attribute
 
   @codi_opts [
-    {@plymio_fontais_key_vekil, Plymio.Fontais.Codi.__vekil__()}
+    {@plymio_fontais_key_dict, Plymio.Fontais.Codi.__vekil__()}
   ]
 
-  :def_error_complete
-  |> VEKIL.reify_proxies(@codi_opts)
+  :defexception_package
+  |> Plymio.Fontais.Vekil.ProxyForomDict.reify_proxies(@codi_opts)
 
-  # PFEM.def_error_complete
+  # PFEM.defexception_package
 end

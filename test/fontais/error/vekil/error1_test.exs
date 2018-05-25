@@ -1,13 +1,13 @@
 defmodule PlymioFontaisErrorVekilError1ModuleA do
-  require Plymio.Fontais.Vekil, as: VEKIL
+  require Plymio.Fontais.Vekil.ProxyForomDict, as: PROXYFOROMDICT
   use Plymio.Fontais.Attribute
 
   @codi_opts [
-    {@plymio_fontais_key_vekil, Plymio.Fontais.Codi.__vekil__()}
+    {@plymio_fontais_key_dict, Plymio.Fontais.Codi.__vekil__()}
   ]
 
-  :def_error_complete
-  |> VEKIL.reify_proxies(@codi_opts)
+  :defexception_package
+  |> PROXYFOROMDICT.reify_proxies(@codi_opts)
 end
 
 defmodule PlymioFontaisErrorVekilError1Test do
@@ -23,14 +23,18 @@ defmodule PlymioFontaisErrorVekilError1Test do
   test "error: base 100a" do
     assert error1 = %TestMod{} = TestMod.new!()
 
-    assert [
-             :__exception__,
-             :format_message,
-             :format_order,
-             :message,
-             :reason,
-             :value
-           ] =
+    expect_fields =
+      [
+        :__exception__,
+        :message,
+        :message_config,
+        :message_function,
+        :reason,
+        :value
+      ]
+      |> Enum.sort()
+
+    assert expect_fields ==
              error1
              |> Map.from_struct()
              |> Map.keys()
@@ -39,8 +43,8 @@ defmodule PlymioFontaisErrorVekilError1Test do
     assert is_value_unset(error1.message)
     assert is_value_unset(error1.reason)
     assert is_value_unset(error1.value)
-    assert is_value_unset(error1.format_message)
-    assert @plymio_fontais_error_default_format_order == error1.format_order
+    assert is_value_unset(error1.message_function)
+    assert @plymio_fontais_error_default_message_config == error1.message_config
   end
 
   test "simple: 100a" do
@@ -85,7 +89,7 @@ defmodule PlymioFontaisErrorVekilError1Test do
 
     assert ":transform1" = transform1 |> Exception.message()
 
-    transform2 = fn state -> state |> Map.get(@plymio_fontais_error_key_message) end
+    transform2 = fn state -> state |> Map.get(@plymio_fontais_error_field_message) end
 
     assert transform2 =
              %TestMod{} =

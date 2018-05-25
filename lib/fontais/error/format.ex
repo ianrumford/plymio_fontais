@@ -99,7 +99,7 @@ defmodule Plymio.Fontais.Error.Format do
       opts
       |> Stream.filter(fn {_k, v} -> is_value_set(v) end)
       |> Enum.reduce_while([], fn
-        {@plymio_fontais_error_key_value, v}, texts ->
+        {@plymio_fontais_error_field_value, v}, texts ->
           with {:ok, text} <- v |> format_error_message_value do
             texts
             |> case do
@@ -115,7 +115,7 @@ defmodule Plymio.Fontais.Error.Format do
             {:error, %{__struct__: _}} = result -> {:halt, result}
           end
 
-        {k, v}, texts when k in [@plymio_fontais_error_key_message] ->
+        {k, v}, texts when k in [@plymio_fontais_error_field_message] ->
           with {:ok, text} <- {k, v} |> format_error_message_no_prefix_kv do
             {:cont, [text | texts]}
           else

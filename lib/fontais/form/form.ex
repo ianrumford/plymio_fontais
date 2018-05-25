@@ -81,7 +81,9 @@ defmodule Plymio.Fontais.Form do
 
   @doc ~S"""
 
-  `forms_validate/1` validates the *forms* using `form_validate/1` on each *form*, returning `{:ok, forms}` if all are valid, else `{:error, error}`.
+  `forms_validate/1` validates the *forms* using `form_validate/1` on
+  each *form*, returning `{:ok, forms}` if all are valid, else
+  `{:error, error}`.
 
   ## Examples
 
@@ -106,12 +108,15 @@ defmodule Plymio.Fontais.Form do
   def forms_validate(forms) when is_list(forms) do
     forms
     |> Stream.with_index()
-    |> Enum.reduce([], fn {form, index}, invalid_indices ->
-      case form |> form_validate do
-        {:ok, _} -> invalid_indices
-        {:error, _} -> [index | invalid_indices]
+    |> Enum.reduce(
+      [],
+      fn {form, index}, invalid_indices ->
+        case form |> form_validate do
+          {:ok, _} -> invalid_indices
+          {:error, _} -> [index | invalid_indices]
+        end
       end
-    end)
+    )
     |> case do
       # no invalid forms
       [] ->
@@ -129,8 +134,12 @@ defmodule Plymio.Fontais.Form do
   end
 
   @doc ~S"""
-  `forms_reduce/1` takes a zero, one or more *form*, normalises them, and reduces the *forms* to a single
-  *form* using `Kernel.SpecialForms.unquote_splicing/1`.
+  `forms_reduce/1` takes a zero, one or more *form*, normalises them,
+  and reduces the *forms* to a single *form* using
+  `Kernel.SpecialForms.unquote_splicing/1`.
+
+  Top level block (`:__block__`) forms are "deblocked" into their
+  constituent statements (the `args`).
 
   If the reduction suceeds, `{:ok, reduced_form}` is returned, else `{:error, error}`.
 
@@ -141,6 +150,14 @@ defmodule Plymio.Fontais.Form do
       iex> {:ok, reduced_form} = quote(do: a = x + y) |> forms_reduce
       ...> reduced_form |> Macro.to_string
       "a = x + y"
+
+      iex> {:ok, reduced_form} = quote do
+      ...>   x = x + 1
+      ...>   x = x * x
+      ...>   x = x - 1
+      ...> end |> forms_reduce
+      ...> reduced_form |> Macro.to_string
+      "(\n  x = x + 1\n  x = x * x\n  x = x - 1\n)"
 
       iex> {:ok, reduced_form} = [
       ...>  quote(do: a = x + y),
@@ -178,29 +195,29 @@ defmodule Plymio.Fontais.Form do
 
   def forms_reduce(forms) do
     with {:ok, forms} <- forms |> forms_normalise do
+      forms =
+        forms
+        |> Enum.flat_map(fn
+          {:__block__, _ctx, args} when is_list(args) -> args
+          x -> [x]
+        end)
+
       forms
+      |> length
       |> case do
-        x when is_nil(x) ->
+        0 ->
           {:ok, nil}
 
-        forms ->
-          forms
-          |> length
-          |> case do
-            0 ->
-              {:ok, nil}
+        1 ->
+          {:ok, forms |> hd}
 
-            1 ->
-              {:ok, forms |> List.first()}
+        _ ->
+          form =
+            quote do
+              (unquote_splicing(forms))
+            end
 
-            _ ->
-              form =
-                quote do
-                  (unquote_splicing(forms))
-                end
-
-              {:ok, form}
-          end
+          {:ok, form}
       end
     else
       {:error, %{__exception__: true}} = result -> result
@@ -208,9 +225,10 @@ defmodule Plymio.Fontais.Form do
   end
 
   @doc ~S"""
-  `forms_normalise/1` takes zero, one or more *form* and normalises them to a *forms* returning `{:ok, forms}`.
+  `forms_normalise/1` takes zero, one or more *form* and normalises
+  them to a *forms* returning `{:ok, forms}`.
 
-  The list is first flattened and any `nils` removed before splicing.
+  The list is first flattened and any `nils` or empty blocks are removed.
 
   ## Examples
 
@@ -252,19 +270,26 @@ defmodule Plymio.Fontais.Form do
   def forms_normalise(forms) do
     forms
     |> list_wrap_flat_just
+    |> Enum.reject(fn
+      # empty block
+      {:__block__, _, []} ->
+        true
+
+      _ ->
+        false
+    end)
     |> forms_validate
     |> case do
-      # {:ok, []} -> {:ok, nil}
-      {:ok, _} = result ->
-        result
-
-      {:error, %{__struct__: _}} = result ->
-        result
+      {:ok, _} = result -> result
+      {:error, %{__struct__: _}} = result -> result
     end
   end
 
   @doc ~S"""
-  `opts_forms_normalise/2` takes an *opts*, a *key* and an optional default, gets all the *key*'s values, or uses the default if none, and calls `forms_normalise/1` on the values returning `{:ok, forms}`.
+  `opts_forms_normalise/2` takes an *opts*, a *key* and an optional
+  default, gets all the *key*'s values, or uses the default if none,
+  and calls `forms_normalise/1` on the values returning `{:ok,
+  forms}`.
 
   ## Examples
 
@@ -322,7 +347,9 @@ defmodule Plymio.Fontais.Form do
   end
 
   @doc ~S"""
-  `opts_forms_reduce/2` takes an *opts* and a *key*, gets all the *key*'s values and calls `forms_reduce/1` on the values returning `{:ok, forms}`.
+  `opts_forms_reduce/2` takes an *opts* and a *key*, gets all the
+  *key*'s values and calls `forms_reduce/1` on the values returning
+  `{:ok, forms}`.
 
   ## Examples
 
@@ -378,9 +405,9 @@ defmodule Plymio.Fontais.Form do
     end
   end
 
-  defp forms_edit_normalise_var_dict(dict)
+  defp forms_edit_normalise_term_dict(dict)
 
-  defp forms_edit_normalise_var_dict(dict) do
+  defp forms_edit_normalise_term_dict(dict) do
     cond do
       Keyword.keyword?(dict) ->
         {:ok, dict |> Map.new()}
@@ -390,15 +417,53 @@ defmodule Plymio.Fontais.Form do
         |> Map.keys()
         |> Enum.all?(&is_atom/1)
         |> case do
-          true ->
-            {:ok, dict}
-
-          _ ->
-            new_error_result(m: "forms_edit var dict invalid", v: dict)
+          true -> {:ok, dict}
+          _ -> new_error_result(m: "forms_edit term dict invalid", v: dict)
         end
 
       true ->
-        new_error_result(m: "forms_edit var dict invalid", v: dict)
+        new_error_result(m: "forms_edit term dict invalid", v: dict)
+    end
+  end
+
+  defp forms_edit_normalise_var_dict(dict) do
+    with {:ok, dict} = result <- dict |> forms_edit_normalise_term_dict do
+      dict
+      |> Enum.all?(fn {_k, v} ->
+        v
+        |> case do
+          {form, _, module} when is_atom(form) and is_atom(module) -> true
+          _ -> false
+        end
+      end)
+      |> case do
+        true -> result
+        _ -> new_error_result(m: "forms_edit var dict invalid", v: dict)
+      end
+    else
+      {:error, %{__exception__: true}} = result -> result
+    end
+  end
+
+  defp forms_edit_normalise_atom_dict(dict)
+
+  defp forms_edit_normalise_atom_dict(dict) do
+    cond do
+      Keyword.keyword?(dict) -> {:ok, dict |> Map.new()}
+      is_map(dict) -> {:ok, dict}
+      true -> new_error_result(m: "forms_edit atom dict invalid", v: dict)
+    end
+    |> case do
+      {:error, %{__struct__: _}} = result ->
+        result
+
+      {:ok, dict} = result ->
+        with true <- dict |> Map.keys() |> Enum.all?(&is_atom/1),
+             true <- dict |> Map.values() |> Enum.all?(&is_atom/1) do
+          result
+        else
+          _ -> new_error_result(m: "forms_edit atom dict invalid", v: dict)
+        end
     end
   end
 
@@ -452,7 +517,80 @@ defmodule Plymio.Fontais.Form do
             |> Map.has_key?(form)
             |> case do
               true ->
-                v = var_dict |> Map.get(form)
+                var_dict |> Map.get(form)
+
+              # no replacement
+              _ ->
+                snippet
+            end
+
+          # passthru
+          x ->
+            x
+        end
+      end
+
+      {@plymio_fontais_key_postwalk, fun_postwalk}
+      |> forms_edit_reduce_edit
+    else
+      {:error, %{__exception__: true}} = result -> result
+    end
+  end
+
+  defp forms_edit_reduce_edit({k, v})
+       when k == @plymio_fontais_key_rename_vars do
+    with {:ok, atom_dict} <- v |> forms_edit_normalise_atom_dict do
+      fun_postwalk = fn snippet ->
+        snippet
+        |> case do
+          {form, ctx, module} when is_atom(form) and is_atom(module) ->
+            {Map.get(atom_dict, form, form), ctx, module}
+
+          # passthru
+          x ->
+            x
+        end
+      end
+
+      {@plymio_fontais_key_postwalk, fun_postwalk}
+      |> forms_edit_reduce_edit
+    else
+      {:error, %{__exception__: true}} = result -> result
+    end
+  end
+
+  defp forms_edit_reduce_edit({k, v})
+       when k == @plymio_fontais_key_rename_atoms do
+    with {:ok, atom_dict} <- v |> forms_edit_normalise_atom_dict do
+      fun_postwalk = fn
+        snippet when is_atom(snippet) ->
+          atom_dict |> Map.get(snippet, snippet)
+
+        # passthru
+        snippet ->
+          snippet
+      end
+
+      {@plymio_fontais_key_postwalk, fun_postwalk}
+      |> forms_edit_reduce_edit
+    else
+      {:error, %{__exception__: true}} = result -> result
+    end
+  end
+
+  defp forms_edit_reduce_edit({k, v})
+       when k == @plymio_fontais_key_replace_atoms do
+    with {:ok, term_dict} <- v |> forms_edit_normalise_term_dict do
+      fun_postwalk = fn snippet ->
+        snippet
+        |> is_atom
+        |> case do
+          true ->
+            term_dict
+            |> Map.has_key?(snippet)
+            |> case do
+              true ->
+                v = term_dict |> Map.get(snippet)
 
                 case v |> Macro.validate() do
                   :ok -> v
@@ -465,9 +603,27 @@ defmodule Plymio.Fontais.Form do
             end
 
           # passthru
-          x ->
-            x
+          _ ->
+            snippet
         end
+      end
+
+      {@plymio_fontais_key_postwalk, fun_postwalk}
+      |> forms_edit_reduce_edit
+    else
+      {:error, %{__exception__: true}} = result -> result
+    end
+  end
+
+  defp forms_edit_reduce_edit({k, v})
+       when k == @plymio_fontais_key_rename_funs do
+    with {:ok, atom_dict} <- v |> forms_edit_normalise_atom_dict do
+      fun_postwalk = fn
+        {form, ctx, args} when is_atom(form) and is_list(args) ->
+          {Map.get(atom_dict, form, form), ctx, args}
+
+        x ->
+          x
       end
 
       {@plymio_fontais_key_postwalk, fun_postwalk}
@@ -500,14 +656,112 @@ defmodule Plymio.Fontais.Form do
     end
   end
 
-  # not documented at this time
-  @doc false
+  @doc ~S"""
+  `forms_edit/1` takes zero, one or more *form* and an optional *opts*, normalises
+  the *forms* and then applies the edit *verbs* given in the *opts*, returning `{:ok, forms}.`
+
+  ## Examples
+
+  No opts just returns the normalise forms.
+
+      iex> {:ok, forms} = [quote(do: x = x + 1), quote(do: x = x * x), quote(do: x = x - 1)]
+      ...> |> forms_edit
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["x = x + 1", "x = x * x", "x = x - 1"]
+
+  The *forms* can be mapped by an arbitrary function using the `:transform` verb:
+
+      iex> {:ok, forms} = [quote(do: x = x + 1), quote(do: x = x * x), quote(do: x = x - 1)]
+      ...> |> forms_edit(transform: fn _ -> 42 end)
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["42", "42", "42"]
+
+  The *forms* can be mapped by `Macro.postwalk/2` using the `:postwalk` verb, here renaming the `x` var to `a`:
+
+      iex> {:ok, forms} = [quote(do: x = x + 1), quote(do: x = x * x), quote(do: x = x - 1)]
+      ...> |> forms_edit(postwalk: fn
+      ...>   {:x, ctx, mod} when is_atom(mod) -> {:a, ctx, mod}
+      ...>   v -> v
+      ...> end)
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["a = a + 1", "a = a * a", "a = a - 1"]
+
+  For convenvenience, a `:replace_vars` verb is supported that packages up the postwalk in the previous example:
+
+      iex> {:ok, forms} = [quote(do: x = x + 1), quote(do: x = x * x), quote(do: x = x - 1)]
+      ...> |> forms_edit(replace_vars: [
+      ...>   x: Macro.var(:y, nil)
+      ...> ])
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["y = y + 1", "y = y * y", "y = y - 1"]
+
+  Similarly, the `:rename_vars` verb takes a `Keyword` where the values
+  are atoms and renames any vars found in the `Keyword`:
+
+      iex> {:ok, forms} = [quote(do: x = x + 1), quote(do: x = x * x), quote(do: x = x - 1)]
+      ...> |> forms_edit(rename_vars: [
+      ...>   x: :z,
+      ...>   p: :q
+      ...> ])
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["z = z + 1", "z = z * z", "z = z - 1"]
+
+  The `:rename_atoms` verb takes a `Keyword` where the values
+  are the replacement atoms:
+
+      iex> {:ok, forms} = [quote(do: x = :x_add_1), quote(do: x = :x_mul_x), quote(do: x = :x_sub_1)]
+      ...> |> forms_edit(rename_atoms: [
+      ...>   x: :z,
+      ...>   x_add_1: :add_1_to_x,
+      ...>   x_sub_1: :takeaway_1_from_x
+      ...> ])
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["x = :add_1_to_x", "x = :x_mul_x", "x = :takeaway_1_from_x"]
+
+  The `replace_atoms` verb takes a `Keyword` where the values
+  are the replacement term:
+
+      iex> {:ok, forms} = [quote(do: x = :x_add_1), quote(do: x = :x_mul_x), quote(do: x = :x_sub_1)]
+      ...> |> forms_edit(replace_atoms: [
+      ...>   x_add_1: quote(do: x + 1),
+      ...>   x_mul_x: quote(do: x * x),
+      ...>   x_sub_1: quote(do: x - 1),
+      ...> ])
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["x = x + 1", "x = x * x", "x = x - 1"]
+
+  The `:rename_funs` verb takes a `Keyword` where the values
+  are the replacement fun names:
+
+      iex> {:ok, forms} = [
+      ...>    quote do
+      ...>      def x_add_1(x), do: x + 1
+      ...>    end,
+      ...>    quote do
+      ...>      def x_mul_x(x), do: x * x
+      ...>    end,
+      ...>    quote do
+      ...>      def x_sub_1(x), do: x - 1
+      ...>    end
+      ...> ] |> forms_edit(rename_funs: [
+      ...>   x_mul_x: :times_x,
+      ...>   x_sub_1: :decr_x
+      ...> ])
+      ...> forms |> Enum.map(&Macro.to_string/1)
+      ["def(x_add_1(x)) do\n  x + 1\nend",
+       "def(times_x(x)) do\n  x * x\nend",
+       "def(decr_x(x)) do\n  x - 1\nend"]
+  """
 
   @since "0.1.0"
 
   @spec forms_edit(any, any) :: {:ok, forms} | {:error, error}
 
-  def forms_edit(forms, opts)
+  def forms_edit(forms, opts \\ [])
+
+  def forms_edit(forms, []) do
+    forms |> forms_normalise
+  end
 
   def forms_edit(forms, opts) do
     with {:ok, edit_fun} <- opts |> forms_edit_reduce_opts,

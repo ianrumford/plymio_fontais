@@ -1,6 +1,6 @@
 defmodule Plymio.Fontais.Result do
   @moduledoc ~S"""
-  Functions for Result Patterns: `{:ok, any}` or `{:error, error}`
+  Functions for Result Patterns: `{:ok, value}` or `{:error, error}`.
 
   See `Plymio.Fontais` for overview and documentation terms.
   """

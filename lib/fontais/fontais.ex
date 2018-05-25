@@ -22,10 +22,10 @@ defmodule Plymio.Fontais do
 
   ## Standard Processing and Result Patterns
 
-  Many functions return either `{:ok, any}` or `{:error, error}`
+  Many functions return either `{:ok, value}` or `{:error, error}`
   where `error` will be an `Exception`.
 
-  Peer bang functions return either `value` or raises `error`.
+  Peer bang functions return either the `value` or raises the `error`.
 
   There are three common function *patterns*:
 
@@ -35,7 +35,7 @@ defmodule Plymio.Fontais do
   `{:error, error}`.
 
   If the function's processing (e.g. after calling other functions)
-  does not produce a `value` that is either `{:ok, any}` or `{:error,
+  does not produce either `{:ok, value}` or `{:error,
   error}`, a new `{:error, error}` will be created and returned.
 
   A *pattern 0* function is *pessimistic* i.e it assumes the `value` is invalid, and
@@ -61,7 +61,7 @@ defmodule Plymio.Fontais do
   See below for an explanation of *the unset value*.
 
   A *pattern 2* function works like *pattern 1* other than if
-  the `value` is `nil` or *the unset value*, it is
+  the `value` is `nil` or *the unset value* (see below), it is
   returned unchanged.
 
   ## The Unset Value
@@ -69,7 +69,7 @@ defmodule Plymio.Fontais do
   In many situations it is useful to know whether a var has been set
   explicity but its value can be validly `nil`.
 
-  For example the default, default value for a `struct` field is
+  For example the default default value for a `struct` field is
   `nil`. But there is no way to determine whether the field has been
   set to `nil` or has never been set at all.
 
@@ -100,6 +100,7 @@ defmodule Plymio.Fontais do
   @type aliases_dict :: %{optional(alias_key) => alias_key}
 
   @type kv :: {any, any}
+  @type product :: [kv]
   @type opts :: Keyword.t()
   @type opzioni :: [opts]
   @type error :: struct

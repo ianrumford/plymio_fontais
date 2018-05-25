@@ -1,23 +1,34 @@
 # CHANGELOG
 
-## v0.1.1
+## v0.2.0
 
 ### Bug Fixes
 
-Misc code tidying (e.g. deleting commented code).
+Deleted erroneous `Enum.reverse/1` in
+`Plymio.Vekil.Utility.create_form_vekil/1` before merging vekils - last
+wins!.
 
-To forestall dialyzer warnins, changed `defp update_field` clauses in
-`Plymio.Fontais.Error`'s *vekil* to always return `{:ok, any}` or
-`{:error, error}`. Also changed `def update` in
-`Plymio.Fontais.Error`'s *vekil* to only accept `{:ok, any}` or
-`{:error, error}` from calls to `update_field`.
+### Internal Changes
 
-Deleted spurious `true` clauses in `Plymio.Fontais.Workflow`'s *vekil* entries:
+Changed names of some `Plymio.Fontais.Error` related module attributes
+and `defexception` fields to be more descriptive and for better
+integration with `Harnais.Error`.
 
-1. :defp_update_field_proxy_validate_opzioni
-2. :defp_update_field_proxy_normalise_opzioni
+The `Plymio.Fontais.Workflow` module has been broken out into more
+focused *proxy* families.
 
+The first cut of a standard style and naming convention
+for the *proxies* in a *vekil* has been adopted.
 
+`Plymio.Fontais.Vekil` has been renamed to
+`Plymio.Fontais.Vekil.ProxyForomDict` to more correctly describe its
+function. This module supports the (new) `Plymio.Vekil` package.
+
+Added gather opts functions to `Plymio.Fontais.Funcio`
+
+Added `def_custom_opts_has_key?/1` macro to `Plymio.Fontais.Option.Macro`
+
+`Plymio.Fontais.Form.forms_edit/2` is now documented.
 
 ## v0.1.0
 
